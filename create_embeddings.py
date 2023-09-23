@@ -9,8 +9,11 @@ import tqdm
 tensor_to_numpy = lambda t:t.detach().cpu().numpy()
 # import blosc2
 def extract_patches(t,patch_size,stride):
-    return t.unfold(2,patch_size,stride).unfold(3,patch_size,stride)
-
+    patches =  t.unfold(2,patch_size,stride).unfold(3,patch_size,stride)
+    patches = patches.permute(0,2,3,1,4,5)
+    patches = patches.flatten(start_dim=0,end_dim=2)
+    patches = patches.view(patches.shape[0],-1)
+    return patches
 def extract_patches_for_split(imagenet_folder,split,embeddings_root_folder,patch_size=7,stride=1,batch_size = 100):
     save_dir = os.path.join(embeddings_root_folder,split)
     os.makedirs(save_dir,exist_ok=True)

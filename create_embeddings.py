@@ -43,8 +43,16 @@ def extract_patches_for_split(imagenet_folder,split,embeddings_root_folder,patch
         # if b ==1:
         #     break
         # assert False
-imagenet_folder = 'tiny-imagenet-200'
-split = 'val'
-extract_patches_for_split(imagenet_folder,split,'embeddings',batch_size = 1000)
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--imagenet-folder',default='tiny-imagenet-200')
+parser.add_argument('--split',default='val')
+parser.add_argument('--batch-size',default=1000,type=int)
+args = parser.parse_args()
+
+imagenet_folder = args.imagenet_folder
+split = args.split
+batch_size = args.batch_size
+extract_patches_for_split(imagenet_folder,split,'embeddings',batch_size = batch_size)
 
 

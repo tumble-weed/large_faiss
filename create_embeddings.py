@@ -14,13 +14,13 @@ def extract_patches(t,patch_size,stride):
     patches = patches.flatten(start_dim=0,end_dim=2)
     patches = patches.view(patches.shape[0],-1)
     return patches
-def extract_patches_for_split(imagenet_folder,split,embeddings_root_folder,patch_size=7,stride=1,batch_size = 100):
+def extract_patches_for_split(dataset_folder,split,embeddings_root_folder,patch_size=7,stride=1,batch_size = 100,dataset='tiny_imagenet'):
     save_dir = os.path.join(embeddings_root_folder,split)
     os.makedirs(save_dir,exist_ok=True)
     if split == 'train':
-        pattern = os.path.join(imagenet_folder,split,'*','images','*.JPEG')
+        pattern = os.path.join(dataset_folder,split,'*','images','*.JPEG')
     elif split == 'val':
-        pattern = os.path.join(imagenet_folder,split,'images','*.JPEG')
+        pattern = os.path.join(dataset_folder,split,'images','*.JPEG')
     print(pattern)
     filepaths = glob.glob(pattern)
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
@@ -42,20 +42,20 @@ def extract_patches_for_split(imagenet_folder,split,embeddings_root_folder,patch
         # import ipdb;ipdb.set_trace()
         patches_ = np.reshape(patches_,(patches_.shape[0],-1))
         # np.savez(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
-        np.save(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
+        np.save(os.path.join(save_dir,f'{dataset}_{split}_{b}'), patches_)
         # if b ==1:
         #     break
         # assert False
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--imagenet-folder',default='tiny-imagenet-200')
+parser.add_argument('--dataset-folder',default='tiny-imagenet-200')
 parser.add_argument('--split',default='val')
 parser.add_argument('--batch-size',default=1000,type=int)
 args = parser.parse_args()
 
-imagenet_folder = args.imagenet_folder
+dataset_folder = args.dataset_folder
 split = args.split
 batch_size = args.batch_size
-extract_patches_for_split(imagenet_folder,split,'embeddings',batch_size = batch_size)
+extract_patches_for_split(dataset_folder,split,'embeddings',batch_size = batch_size)
 
 

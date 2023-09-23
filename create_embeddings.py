@@ -38,8 +38,8 @@ def extract_patches_for_split(imagenet_folder,split,embeddings_root_folder,patch
         patches_ = patches_.astype(np.float16)
         # import ipdb;ipdb.set_trace()
         patches_ = np.reshape(patches_,(patches_.shape[0],-1))
-        np.savez(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
-        # np.save(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
+        # np.savez(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
+        np.save(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
         # if b ==1:
         #     break
         # assert False

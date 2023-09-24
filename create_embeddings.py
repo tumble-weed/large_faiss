@@ -18,16 +18,9 @@ def extract_patches(t,patch_size,stride):
     patches_ = patches_.astype(np.float16)
     
     patches_ = np.reshape(patches_,(patches_.shape[0],-1))
+    # import ipdb;ipdb.set_trace()
     return patches_
-'''
-def extract_and_save(tbatch,patch_size,stride):
-    patches = extract_patches(tbatch,patch_size,stride)
-    patches_ = tensor_to_numpy(patches)
-    patches_ = patches_.astype(np.float16)
-    
-    patches_ = np.reshape(patches_,(patches_.shape[0],-1))
-    return patches_
-'''
+
 def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100,size=64):
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
     # print(filepaths)
@@ -46,16 +39,7 @@ def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,strid
             tbatch.append(t)
         tbatch = torch.stack(tbatch,0)
         patches_ = extract_patches(tbatch,patch_size,stride)
-        '''
-        patches = extract_patches(tbatch,patch_size,stride)
-        patches_ = tensor_to_numpy(patches)
-        patches_ = patches_.astype(np.float16)
-        # import ipdb;ipdb.set_trace()
-        patches_ = np.reshape(patches_,(patches_.shape[0],-1))
-        # np.savez(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
-        # np.save(os.path.join(save_dir,f'{dataset}_{split}_{b}'), patches_)
-        np.save(save_pattern.format(b), patches_)
-        '''
+
         np.save(save_pattern.format(size,b), patches_)
         # if b ==1:
         #     break
@@ -76,8 +60,8 @@ embeddings_root_folder,
 size = 64,
 ):
     dataset = 'tiny-imagenet-200'
-    save_dir = os.path.join(embeddings_root_folder,dataset,split)
-    save_pattern = os.path.join(save_dir,str(size),f'{dataset}_{split}')+'_{}_{}'
+    save_dir = os.path.join(embeddings_root_folder,dataset,split,str(size))
+    save_pattern = os.path.join(save_dir,f'{dataset}_{split}')+'_{}_{}'
     os.makedirs(save_dir,exist_ok=True)
     if split == 'train':
         pattern = os.path.join(dataset_folder,split,'*','images','*.JPEG')
@@ -88,7 +72,7 @@ size = 64,
 
     extract_patches_for_imagenet_split(filepaths,
     save_pattern,batch_size = batch_size,size=size)
-
+    return save_dir
 
 
 def create_cifar_embeddings(dataset_folder,
@@ -98,8 +82,8 @@ embeddings_root_folder,
 size = 32,
 ):
     dataset = 'cifar'
-    save_dir = os.path.join(embeddings_root_folder,dataset,split)
-    save_pattern = os.path.join(save_dir,str(size),f'{dataset}_{split}')+'_{}_{}'
+    save_dir = os.path.join(embeddings_root_folder,dataset,split,str(size))
+    save_pattern = os.path.join(save_dir,f'{dataset}_{split}')+'_{}_{}'
     os.makedirs(save_dir,exist_ok=True)
     if split == 'train':
         raise NotImplementedError
@@ -113,6 +97,7 @@ size = 32,
 
     extract_patches_for_cifar_split(data_dict,
     save_pattern,batch_size = batch_size,size=size)
+    return save_dir
 
 def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1,batch_size = 100,size=32):
     
@@ -121,31 +106,22 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
     # assert False
     nbatches = (data.shape[0] + batch_size - 1)//batch_size
     for b in tqdm.tqdm(range(nbatches)):
-        '''
-        bpaths = filepaths[b*batch_size:(b+1)*batch_size]
-        tbatch =[]
-        for p in tqdm.tqdm(bpaths):
-            im = skimage.io.imread(p)
-            if im.ndim == 2:
-                im = np.stack([im,im,im],axis=-1)
-            im_pil = Image.fromarray(im)
-            t = torchvision.transforms.ToTensor()(im_pil)
-            tbatch.append(t)
-        tbatch = torch.stack(tbatch,0)
-        '''
+
         tbatch_ = data[b*batch_size:(b+1)*batch_size:]
         tbatch_ = np.reshape(tbatch_,(-1,3,32,32))
-        # for j in range()
+
         import dutils
         # assert False
         if size != 32:
             tbatch_bhwc = np.transpose(tbatch_,(0,2,3,1))
             tbatch_bhwc1 = skimage.transform.resize(tbatch_bhwc,(tbatch_bhwc.shape[0],size,size,3))
             tbatch_ = np.transpose(tbatch_bhwc1,(0,3,1,2))
-        # tbatch_ = np.transpose(tbatch_,(0,3,1,2))
+
         tbatch = torch.tensor(tbatch_)
         # assert False
         patches_ = extract_patches(tbatch,patch_size,stride)
+        if patches_.max() > 1:
+            patches_ = patches_/255.
         np.save(save_pattern.format(size,b), patches_)
         # if b ==1:
         #     break

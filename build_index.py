@@ -1,6 +1,6 @@
-# from autofaiss import build_index
-# import argparse
-# import os
+from autofaiss import build_index
+import argparse
+import os
 # def create_imagenet_index():
 #     parser = argparse.ArgumentParser()
 #     parser.add_argument('--embeddings-folder',default='embeddings/tiny-imagenet-200')
@@ -32,7 +32,7 @@
 #     current_memory_available=f"{current_memory_available}G",
 #     )
 
-def create_index():
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset',default='cifar')
     parser.add_argument('--split',default='test')
@@ -49,6 +49,11 @@ def create_index():
     index_folder = args.index_folder
     split = args.split
     current_memory_available = args.current_memory_available
+    create_index(dataset,split,
+current_memory_available,embeddings_folder,index_folder)
+
+def create_index(dataset,split,
+current_memory_available,embeddings_folder,index_folder):
     '''
     current_memory_available is the parameter controlling the maximum amount of
     ram to use, it's that one you need to put at 16GB if you want to use only
@@ -58,6 +63,7 @@ def create_index():
     different.
 
     '''
+    import ipdb;ipdb.set_trace()
     build_index(
     embeddings=embeddings_folder,
     index_path=f"{index_folder}/{dataset}_{split}.index",
@@ -66,4 +72,4 @@ def create_index():
     current_memory_available=f"{current_memory_available}G",
     )
 if __name__ == '__main__':
-    create_index()
+    main()

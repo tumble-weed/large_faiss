@@ -14,17 +14,20 @@ def extract_patches(t,patch_size,stride):
     patches = patches.permute(0,2,3,1,4,5)
     patches = patches.flatten(start_dim=0,end_dim=2)
     patches = patches.view(patches.shape[0],-1)
-    return patches
+    patches_ = tensor_to_numpy(patches)
+    patches_ = patches_.astype(np.float16)
+    
+    patches_ = np.reshape(patches_,(patches_.shape[0],-1))
+    return patches_
+'''
 def extract_and_save(tbatch,patch_size,stride):
     patches = extract_patches(tbatch,patch_size,stride)
     patches_ = tensor_to_numpy(patches)
     patches_ = patches_.astype(np.float16)
-    # import ipdb;ipdb.set_trace()
+    
     patches_ = np.reshape(patches_,(patches_.shape[0],-1))
-    # np.savez(os.path.join(save_dir,f'tiny_imagenet_{split}_{b}'), patches_)
-    # np.save(os.path.join(save_dir,f'{dataset}_{split}_{b}'), patches_)
     return patches_
-
+'''
 def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100):
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
     # print(filepaths)
@@ -39,7 +42,7 @@ def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,strid
             t = torchvision.transforms.ToTensor()(im_pil)
             tbatch.append(t)
         tbatch = torch.stack(tbatch,0)
-        patches_ = extract_and_save(tbatch,patch_size,stride)
+        patches_ = extract_patches(tbatch,patch_size,stride)
         '''
         patches = extract_patches(tbatch,patch_size,stride)
         patches_ = tensor_to_numpy(patches)
@@ -129,7 +132,7 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
         tbatch_ = np.reshape(tbatch_,(-1,3,32,32))
         tbatch = torch.tensor(tbatch_)
         # assert False
-        patches_ = extract_and_save(tbatch,patch_size,stride)
+        patches_ = extract_patches(tbatch,patch_size,stride)
         np.save(save_pattern.format(b), patches_)
         # if b ==1:
         #     break

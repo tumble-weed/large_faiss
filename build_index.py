@@ -61,7 +61,7 @@ def create_index():
     build_index(
     embeddings=embeddings_folder,
     index_path=f"{index_folder}/{dataset}_{split}.index",
-    index_infos_path="{index_folder}/{dataset}_{split}_infos.json",
+    index_infos_path=f"{index_folder}/{dataset}_{split}_infos.json",
     max_index_memory_usage="10G",
     current_memory_available=f"{current_memory_available}G",
     )

@@ -28,7 +28,7 @@ def extract_and_save(tbatch,patch_size,stride):
     patches_ = np.reshape(patches_,(patches_.shape[0],-1))
     return patches_
 '''
-def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100):
+def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100,size=64):
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
     # print(filepaths)
     for b in tqdm.tqdm(range(nbatches)):
@@ -38,6 +38,9 @@ def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,strid
             im = skimage.io.imread(p)
             if im.ndim == 2:
                 im = np.stack([im,im,im],axis=-1)
+            if size != 64:
+                im = skimage.transform.resize(im,(size,size,3))
+                assert False
             im_pil = Image.fromarray(im)
             t = torchvision.transforms.ToTensor()(im_pil)
             tbatch.append(t)
@@ -53,7 +56,7 @@ def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,strid
         # np.save(os.path.join(save_dir,f'{dataset}_{split}_{b}'), patches_)
         np.save(save_pattern.format(b), patches_)
         '''
-        np.save(save_pattern.format(b), patches_)
+        np.save(save_pattern.format(size,b), patches_)
         # if b ==1:
         #     break
 
@@ -69,11 +72,12 @@ def read_cifar_file(file):
 def create_tiny_imagenet_embeddings(dataset_folder,
 split,
 batch_size,
-embeddings_root_folder
+embeddings_root_folder,
+size = 64,
 ):
     dataset = 'tiny-imagenet-200'
     save_dir = os.path.join(embeddings_root_folder,dataset,split)
-    save_pattern = os.path.join(save_dir,f'{dataset}_{split}')+'_{}'
+    save_pattern = os.path.join(save_dir,str(size),f'{dataset}_{split}')+'_{}_{}'
     os.makedirs(save_dir,exist_ok=True)
     if split == 'train':
         pattern = os.path.join(dataset_folder,split,'*','images','*.JPEG')
@@ -83,18 +87,19 @@ embeddings_root_folder
     filepaths = glob.glob(pattern)
 
     extract_patches_for_imagenet_split(filepaths,
-    save_pattern,batch_size = batch_size)
+    save_pattern,batch_size = batch_size,size=size)
 
 
 
 def create_cifar_embeddings(dataset_folder,
 split,
 batch_size,
-embeddings_root_folder
+embeddings_root_folder,
+size = 32,
 ):
     dataset = 'cifar'
     save_dir = os.path.join(embeddings_root_folder,dataset,split)
-    save_pattern = os.path.join(save_dir,f'{dataset}_{split}')+'_{}'
+    save_pattern = os.path.join(save_dir,str(size),f'{dataset}_{split}')+'_{}_{}'
     os.makedirs(save_dir,exist_ok=True)
     if split == 'train':
         raise NotImplementedError
@@ -107,9 +112,9 @@ embeddings_root_folder
     # filepaths = glob.glob(pattern)
 
     extract_patches_for_cifar_split(data_dict,
-    save_pattern,batch_size = batch_size)
+    save_pattern,batch_size = batch_size,size=size)
 
-def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1,batch_size = 100):
+def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1,batch_size = 100,size=32):
     
     # print(filepaths)
     data = data_dict[b'data']
@@ -130,10 +135,18 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
         '''
         tbatch_ = data[b*batch_size:(b+1)*batch_size:]
         tbatch_ = np.reshape(tbatch_,(-1,3,32,32))
+        # for j in range()
+        import dutils
+        # assert False
+        if size != 32:
+            tbatch_bhwc = np.transpose(tbatch_,(0,2,3,1))
+            tbatch_bhwc1 = skimage.transform.resize(tbatch_bhwc,(tbatch_bhwc.shape[0],size,size,3))
+            tbatch_ = np.transpose(tbatch_bhwc1,(0,3,1,2))
+        # tbatch_ = np.transpose(tbatch_,(0,3,1,2))
         tbatch = torch.tensor(tbatch_)
         # assert False
         patches_ = extract_patches(tbatch,patch_size,stride)
-        np.save(save_pattern.format(b), patches_)
+        np.save(save_pattern.format(size,b), patches_)
         # if b ==1:
         #     break
 def main():

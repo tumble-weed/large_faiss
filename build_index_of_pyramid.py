@@ -61,10 +61,10 @@ def main():
                 args.index_folder
             )
             cleanup(embeddings_folder)
-            assert False
+            # assert False
 def cleanup(folder):
     cmd = f'rm -rf {folder}'
-    import ipdb;ipdb.set_trace()
+    # import ipdb;ipdb.set_trace()
     os.system(cmd)
 if __name__ == '__main__':
     main()

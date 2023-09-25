@@ -23,6 +23,7 @@ def extract_patches(t,patch_size,stride):
 
 def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100,size=64):
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
+    ndigits = len(str(nbatches - 1))
     # print(filepaths)
     for b in tqdm.tqdm(range(nbatches)):
         bpaths = filepaths[b*batch_size:(b+1)*batch_size]
@@ -39,8 +40,9 @@ def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,strid
             tbatch.append(t)
         tbatch = torch.stack(tbatch,0)
         patches_ = extract_patches(tbatch,patch_size,stride)
-
-        np.save(save_pattern.format(size,b), patches_)
+        
+        strb = "{:0{width}d}".format(b, width=ndigits)
+        np.save(save_pattern.format(size,strb), patches_)
         # if b ==1:
         #     break
 
@@ -105,6 +107,7 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
     data = data_dict[b'data']
     # assert False
     nbatches = (data.shape[0] + batch_size - 1)//batch_size
+    ndigits = len(str(nbatches - 1))
     for b in tqdm.tqdm(range(nbatches)):
 
         tbatch_ = data[b*batch_size:(b+1)*batch_size:]
@@ -122,7 +125,10 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
         patches_ = extract_patches(tbatch,patch_size,stride)
         if patches_.max() > 1:
             patches_ = patches_/255.
-        np.save(save_pattern.format(size,b), patches_)
+
+        strb = "{:0{width}d}".format(b, width=ndigits)
+
+        np.save(save_pattern.format(size,strb), patches_)
         # if b ==1:
         #     break
 def main():

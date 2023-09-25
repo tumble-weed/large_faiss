@@ -52,7 +52,7 @@ def main():
     create_index(dataset,split,
 current_memory_available,embeddings_folder,index_folder)
 
-def create_index(dataset,split,
+def create_index(dataset,split,size,
 current_memory_available,embeddings_folder,index_folder):
     '''
     current_memory_available is the parameter controlling the maximum amount of
@@ -63,11 +63,11 @@ current_memory_available,embeddings_folder,index_folder):
     different.
 
     '''
-    import ipdb;ipdb.set_trace()
+    # import ipdb;ipdb.set_trace()
     build_index(
     embeddings=embeddings_folder,
-    index_path=f"{index_folder}/{dataset}_{split}.index",
-    index_infos_path=f"{index_folder}/{dataset}_{split}_infos.json",
+    index_path=f"{index_folder}/{dataset}_{split}_{size}.index",
+    index_infos_path=f"{index_folder}/{dataset}_{split}_{size}_infos.json",
     max_index_memory_usage="10G",
     current_memory_available=f"{current_memory_available}G",
     )

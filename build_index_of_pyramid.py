@@ -56,6 +56,7 @@ def main():
             build_index.create_index(
                 dataset,
                 args.split,
+                size,
                 20,
                 embeddings_folder,
                 args.index_folder

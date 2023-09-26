@@ -4,6 +4,9 @@ import torch
 import os
 import build_index
 import create_embeddings
+import debugger
+import LLL
+import glob
 def main():
     parser = argparse.ArgumentParser()
     #========================================================
@@ -35,6 +38,7 @@ def main():
     if add_base_level is True:
         sizes[-1] = args.coarse_dim
     # assert False
+    # sizes = sizes[1:]
     for size in sizes:
         # assert False
         # split = args.split
@@ -53,7 +57,9 @@ def main():
             args.batch_size,
             args.embeddings_root_folder,
             size=size)  
-            build_index.create_index(
+            
+            '''
+            index_path,index_infos_path = build_index.create_index_autofaiss(
                 dataset,
                 args.split,
                 size,
@@ -61,7 +67,22 @@ def main():
                 embeddings_folder,
                 args.index_folder
             )
+            '''
+            patch_size = 7
+            index_path,index_infos_path = build_index.create_index_mine(
+                dataset,
+                args.split,
+                size,
+                list(glob.glob(os.path.join(embeddings_folder,"*.memmap")))[0],
+                args.index_folder
+            )
+
+            import faiss
+            index = faiss.read_index(index_path)
+            D,I = index.search(np.random.random((64,147)),1)
+            # import ipdb;ipdb.set_trace()
             cleanup(embeddings_folder)
+            
             # assert False
 def cleanup(folder):
     cmd = f'rm -rf {folder}'

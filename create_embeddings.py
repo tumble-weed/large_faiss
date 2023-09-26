@@ -7,10 +7,20 @@ from PIL import Image
 import skimage.io
 import tqdm
 import argparse
+import dutils
+import debugger
+import embedding_savers
 tensor_to_numpy = lambda t:t.detach().cpu().numpy()
+#====================================================== 
 # import blosc2
+def convert_to_relative_index(I,patches_per_image):
+    image_ix = I//patches_per_image
+    rel_patch_ix = I%patches_per_image
+    return image_ix,rel_patch_ix
+
 def extract_patches(t,patch_size,stride):
     patches =  t.unfold(2,patch_size,stride).unfold(3,patch_size,stride)
+    patches_per_image = np.prod(patches.shape[2:4])
     patches = patches.permute(0,2,3,1,4,5)
     patches = patches.flatten(start_dim=0,end_dim=2)
     patches = patches.view(patches.shape[0],-1)
@@ -19,7 +29,7 @@ def extract_patches(t,patch_size,stride):
     
     patches_ = np.reshape(patches_,(patches_.shape[0],-1))
     # import ipdb;ipdb.set_trace()
-    return patches_
+    return patches_,patches_per_image
 
 def extract_patches_for_imagenet_split(filepaths,save_pattern,patch_size=7,stride=1,batch_size = 100,size=64):
     nbatches = (len(filepaths) + batch_size - 1)//batch_size
@@ -51,6 +61,8 @@ def read_cifar_file(file):
     import pickle
     with open(file, 'rb') as fo:
         d = pickle.load(fo, encoding='bytes')
+    d[b'data'] = d[b'data']/255.
+    # d[b'data'] = d[b'data'] - 0.5
     return d
 
 
@@ -108,12 +120,16 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
     # assert False
     nbatches = (data.shape[0] + batch_size - 1)//batch_size
     ndigits = len(str(nbatches - 1))
+    # saver = embedding_savers.npy_saver(n_batches,save_pattern.format(size,'{}'))
+    saver = embedding_savers.memmap_saver(None,save_pattern.format(size,'.memmap'))
+    n_images_done = 0
     for b in tqdm.tqdm(range(nbatches)):
 
         tbatch_ = data[b*batch_size:(b+1)*batch_size:]
+        n_images_in_batch = tbatch_.shape[0]
         tbatch_ = np.reshape(tbatch_,(-1,3,32,32))
 
-        import dutils
+        
         # assert False
         if size != 32:
             tbatch_bhwc = np.transpose(tbatch_,(0,2,3,1))
@@ -122,15 +138,19 @@ def extract_patches_for_cifar_split(data_dict,save_pattern,patch_size=7,stride=1
 
         tbatch = torch.tensor(tbatch_)
         # assert False
-        patches_ = extract_patches(tbatch,patch_size,stride)
-        if patches_.max() > 1:
-            patches_ = patches_/255.
+        patches_,n_patches_per_image = extract_patches(tbatch,patch_size,stride)
+        if b ==0:
+            saver.total_len= data.shape[0] * n_patches_per_image
+        
 
         strb = "{:0{width}d}".format(b, width=ndigits)
-
-        np.save(save_pattern.format(size,strb), patches_)
-        # if b ==1:
+        # import ipdb;ipdb.set_trace()
+        # np.save(    save_pattern.format(size,strb), patches_)
+        saver.add(patches_)
+        # if b ==0:
+        #     debugger.patches_ = patches_
         #     break
+        n_images_done += n_images_in_batch
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset-folder',default='tiny-imagenet-200')

@@ -1,2 +1,4 @@
 **/__pycache__
-autofaiss
+large_faiss/autofaiss
+large_faiss/tiny-imagenet-200
+large_faiss/cifar-10-batches-py
